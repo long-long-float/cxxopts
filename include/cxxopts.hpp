@@ -450,6 +450,17 @@ namespace cxxopts
     }
   };
 
+  class option_has_no_value_exception : public OptionParseException
+  {
+    public:
+    option_has_no_value_exception(const std::string& option)
+    : OptionParseException(
+        u8"Option " + LQUOTE + option + RQUOTE + u8" has no value"
+      )
+    {
+    }
+  };
+
   namespace values
   {
     namespace
@@ -1039,6 +1050,10 @@ namespace cxxopts
     const T&
     as() const
     {
+      if (m_value == nullptr) {
+        throw option_has_no_value_exception(m_long);
+      }
+
 #ifdef CXXOPTS_NO_RTTI
       return static_cast<const values::standard_value<T>&>(*m_value).get();
 #else
@@ -1054,9 +1069,11 @@ namespace cxxopts
       {
         m_value = details->make_storage();
       }
+      m_long = details->short_name();
     }
 
     std::shared_ptr<Value> m_value;
+    std::string m_long;
     size_t m_count = 0;
   };
 
